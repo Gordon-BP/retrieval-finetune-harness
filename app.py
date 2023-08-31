@@ -24,6 +24,10 @@ eval_set = pd.DataFrame()
 def load_dataset():
     # Logic to load your dataset
     data = ClimateFeverDataLoader()
+    global evidence_corpus
+    global bi_encoder_training_set
+    global cross_encoder_training_set
+    global eval_set
     evidence_corpus, bi_encoder_training_set, cross_encoder_training_set, eval_set = data()
     bi_train_limit = np.round(len(bi_encoder_training_set)*DATA_SPLIT)
     ct_train_limit = np.round(cross_encoder_training_set.shape[0]*DATA_SPLIT)
@@ -60,36 +64,75 @@ def download_results():
     df = evaluation_results()
     df.to_csv("evaluation_results.csv", index=False)
     return "Results downloaded successfully!"
+def fetch_dataset(dataset):
+    print(dataset)
+    df_map = {"evidence_corpus":evidence_corpus, 
+              "bi_encoder_training_set": bi_encoder_training_set, 
+              "cross_encoder_training_set":cross_encoder_training_set, 
+              "eval_set":eval_set}
+    return df_map[dataset]
+
 
 with gr.Blocks() as page:
+    gr.Markdown("# Gordy's Text Retriever Fine-Tuning UI")
+    with gr.Row():
+        gr.Markdown("""
+                    This is a simple UI for fine-tuning text retrieval systems. See the **Help** tab for more info.
+                    """)
     with gr.Tab("Load Dataset"): #Data loading window
         gr.Markdown("## Load Dataset")
+        gr.Markdown("Press the 'load data' button first, then use the dropdown to select a set to view")
         data_stats = gr.Markdown()
         load_button = gr.Button(value="Load Data")
         load_button.click(fn=load_dataset, inputs=[], outputs=[data_stats])
-        gr.DataFrame(bi_encoder_training_set, row_count=10, headers=['index', 'triplet'])
+       # gr.DataFrame(fn=fetch_dataset, row_count=10, headers=['index', 'triplet'])
+        df = gr.Dropdown(label='Dataset selection',
+                         choices=['evidence_corpus', 'bi_encoder_training_set', 'cross_encoder_training_set', 'eval_set'], 
+                         default='evidence_corpus')
+        display_df = gr.DataFrame(
+            description="Choose one of the datasets to explore",
+            max_rows=15,
+            wrap=True,
+        )
+        df.input(fn=fetch_dataset, inputs=[df], outputs=[display_df])
+
     with gr.Tab("Model Training"): #Model training window
         gr.Markdown("## Train a Bi-Encoder Model")
-        gr.Dropdown()
         model_dropdown = gr.inputs.Dropdown(choices=["bert-base-uncased", "bert-large-uncased"])  # Add your model names
-        COSINE_THRESHOLD = gr.Slider(minimum=0, maximum=1, default=0.5, label="Cosine Similarity Threshold")
-        DOT_THRESHOLD = gr.Slider(minimum=0, maximum=1, default=0.75, label="Dot Product Similarity Threshold")
-        EUC_THRESHOLD = gr.Slider(minimum=0, maximum=150, default=110, label="EUC_THRESHOLD")
-        HNSW_THRESHOLD = gr.Slider(minimum=0, maximum=1, default=0.5, label="HNSW_THRESHOLD")
-        BI_ENCODER_BATCH = gr.Number(default=64, label="Batch Size")
-        BI_ENCODER_EPOCHS = gr.Slider(minimum=1, maximum=16, default=2, label="BI_ENCODER_EPOCHS")
-        BI_ENCODER_TRIPLET_MARGIN = gr.Slider(minimum=0, maximum=10, default=2, label="BI_ENCODER_TRIPLET_MARGIN")
-        BI_ENCODER_WARMUP_MULT = gr.Slider(minimum=0, maximum=1, default=0.1, label="BI_ENCODER_WARMUP_MULT")
-        BI_ENCODER_STEPS_MULT = gr.Slider(minimum=0, maximum=3, default=2, label="BI_ENCODER_STEPS_MULT")
+        with gr.Row():
+            with gr.Column():
+                gr.Markdown("## Training Hyperparameters")
+                BI_ENCODER_BATCH = gr.Number(default=64, label="BATCH_SIZE")
+                BI_ENCODER_EPOCHS = gr.Slider(minimum=1, maximum=16, default=2, step=1, label="BI_ENCODER_EPOCHS", interactive=True)
+                BI_ENCODER_TRIPLET_MARGIN = gr.Slider(minimum=0, maximum=10, default=2, step=0.5, label="BI_ENCODER_TRIPLET_MARGIN")
+                BI_ENCODER_WARMUP_MULT = gr.Slider(minimum=0, maximum=1, default=0.1, step=0.05, label="BI_ENCODER_WARMUP_MULT")
+                BI_ENCODER_STEPS_MULT = gr.Slider(minimum=0, maximum=3, default=2, step=0.5, label="BI_ENCODER_STEPS_MULT")
+            with gr.Column():
+                gr.Markdown("## Evaluation Hyperparameters")
+                COSINE_THRESHOLD = gr.Slider(minimum=0, maximum=1, default=0.5, step=0.05, label="Cosine Similarity Threshold")
+                DOT_THRESHOLD = gr.Slider(minimum=0, maximum=1, default=0.75, step=0.05, label="Dot Product Similarity Threshold")
+                EUC_THRESHOLD = gr.Slider(minimum=0, maximum=150, default=110, step = 5, label="EUC_THRESHOLD")
+                HNSW_THRESHOLD = gr.Slider(minimum=0, maximum=1, default=0.5, step=0.05, label="HNSW_THRESHOLD")
+        
         train_status = gr.Markdown()
         train_button = gr.Button(fn=train_model,inputs=[], outputs=[train_status])
-
 # 3. Evaluations window
     with gr.Tab("Model Evaluation"):
         gr.Markdown("## Model Evaluation")
         df = gr.DataFrame(row_count=10)
         gr.DataFrame(fn=evaluation_results, inputs=[], outputs=[df])
         download_button = gr.Button(value="Download").click(fn=download_results, inputs=[], outputs=[])
+# 4. Model chat!
+    with gr.Tab("Model Chat"):
+        def echo(message, history):
+            return message
+
+        gr.ChatInterface(fn=echo, examples=["hello", "hola", "merhaba"], title="Echo Bot")
+# 5. Help window
+    with gr.Tab("Help"):
+        with open("help.md", "r") as file:
+            markdown_content = file.read()
+            gr.Markdown(markdown_content)
 
 # Combine the three windows into one interface
 page.launch()

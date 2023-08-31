@@ -71,16 +71,16 @@ class ClimateFeverDataLoader():
                 if(len(irrelevant_evidence)!= 0):
                     for re in relevant_evidence:
                         for ie in irrelevant_evidence:
-                            triplets.append(Triplet(items=[row['claim'], re, ie]))
+                            triplets.append(Triplet(items=[row['claim'], re, ie]).items)
                 else:
                     ie = evidence_corpus.loc[~evidence_corpus['evidence'].isin(relevant_evidence)]
                     for re in relevant_evidence:
-                        triplets.append(Triplet(items=[row['claim'], re, ie.sample().iloc[0][0]]))
+                        triplets.append(Triplet(items=[row['claim'], re, ie.sample().iloc[0][0]]).items)
                 return triplets
         
         trips = [trip for trip in dataset.apply(make_triplets, axis=1) if trip is not None]
         trips_df = pd.DataFrame(trips)
-        trips_df.to_csv("data/bi_encoder_training")
+        trips_df.to_csv("data/bi_encoder_training.csv")
         return trips_df
     def makeCrossTrain(self, dataset: pd.DataFrame)-> pd.DataFrame:
         """
@@ -96,7 +96,8 @@ class ClimateFeverDataLoader():
         def cross_train_samples(row):
             samples = []
             for e in row['evidences']:
-                samples.append(CrossEncoderDatum(**{"texts":[row['claim'], e['evidence']], "label":e['evidence_label']}))
+                datum = CrossEncoderDatum(**{"texts":[row['claim'], e['evidence']], "label":e['evidence_label']})
+                samples.append({"texts":datum.texts, "label":datum.label})
             return samples
 
         cross_samples = [item for sublist in dataset.apply(cross_train_samples, axis=1) for item in sublist]
