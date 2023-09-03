@@ -1,3 +1,4 @@
+#@title Climate Dataloader
 from typing import List, Tuple
 import os
 import pandas as pd
@@ -41,7 +42,7 @@ class ClimateFeverDataLoader():
             return [_['evidence'].replace("\"","") for _ in row['evidences']]
         evidence_corpus = pd.DataFrame()
         evidence_corpus['evidence'] = [item for sublist in dataset.apply(extractEvidence, axis=1).tolist() for item in sublist]
-        evidence_corpus.to_csv("data/evidence_corpus.csv")
+        evidence_corpus.to_csv("data/evidence_corpus.csv", index=False)
         return evidence_corpus
         
     def makeBiTrain(self, dataset:pd.DataFrame, evidence_corpus:pd.DataFrame)->List[Triplet]:
@@ -58,7 +59,7 @@ class ClimateFeverDataLoader():
         """
         def make_triplets(row):
             if(row['claim_label'] == 2):
-                return None
+                return []
             else:
                 triplets = []
                 relevant_evidence = []
@@ -71,16 +72,22 @@ class ClimateFeverDataLoader():
                 if(len(irrelevant_evidence)!= 0):
                     for re in relevant_evidence:
                         for ie in irrelevant_evidence:
-                            triplets.append(Triplet(items=[row['claim'], re, ie]).items)
+                          t = Triplet(items=[row['claim'], re, ie])
+                          triplets.append(t.items)
                 else:
                     ie = evidence_corpus.loc[~evidence_corpus['evidence'].isin(relevant_evidence)]
                     for re in relevant_evidence:
-                        triplets.append(Triplet(items=[row['claim'], re, ie.sample().iloc[0][0]]).items)
+                      t=Triplet(items=[row['claim'], re, ie.sample().iloc[0][0]])
+                      triplets.append(t.items)
                 return triplets
+        trips_list = []
+        trips = dataset.apply(make_triplets, axis=1)
+        for idx,_sublist in trips.items():
+          for item in _sublist:
+            trips_list.append(item)
         
-        trips = [trip for trip in dataset.apply(make_triplets, axis=1) if trip is not None]
-        trips_df = pd.DataFrame(trips)
-        trips_df.to_csv("data/bi_encoder_training.csv")
+        trips_df = pd.Series(trips_list, name='Triplets')
+        trips_df.to_csv("data/bi_encoder_training.csv", index=False)
         return trips_df
     def makeCrossTrain(self, dataset: pd.DataFrame)-> pd.DataFrame:
         """
@@ -102,7 +109,7 @@ class ClimateFeverDataLoader():
 
         cross_samples = [item for sublist in dataset.apply(cross_train_samples, axis=1) for item in sublist]
         cross_df = pd.DataFrame(cross_samples)
-        cross_df.to_csv("data/cross_encoder_training.csv")
+        cross_df.to_csv("data/cross_encoder_training.csv", index=False)
         return cross_df
     def makeEvalSet(self, dataset:pd.DataFrame)->pd.DataFrame:
         """
@@ -126,7 +133,7 @@ class ClimateFeverDataLoader():
                 "expected relevant evidence":supporting_evidence
             }
         eval_df = pd.DataFrame.from_records(dataset.apply(make_eval, axis=1))
-        eval_df.to_csv("data/evidence_corpus.csv")
+        eval_df.to_csv("data/eval_set.csv", index=False)
         return eval_df
     
     def __call__(self)->Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -144,7 +151,7 @@ class ClimateFeverDataLoader():
                 missing_files.append(filename)
 
         if missing_files: #Just re-load everything if missing
-            dataset = pd.DataFrame(load_dataset("climate_fever", split='test'))
+            dataset = pd.DataFrame(load_dataset("climate_fever",split='test'))
             evidence_corpus = self.makeEvidenceCorpus(dataset)
             bi_encoder_training_set = self.makeBiTrain(dataset, evidence_corpus)
             cross_encoder_training_set = self.makeCrossTrain(dataset)
@@ -152,7 +159,7 @@ class ClimateFeverDataLoader():
             dataset = None #clean up disk space
         else:
             evidence_corpus = pd.read_csv(os.path.join(data_path, required_files[0]))
-            bi_encoder_training_set = pd.read_csv(os.path.join(data_path, required_files[1]))
+            bi_encoder_training_set = pd.read_csv(os.path.join(data_path, required_files[1]),header=1).squeeze("columns")
             cross_encoder_training_set = pd.read_csv(os.path.join(data_path, required_files[2]))
             eval_set = pd.read_csv(os.path.join(data_path, required_files[3]))
 

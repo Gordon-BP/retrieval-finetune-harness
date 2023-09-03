@@ -2,6 +2,8 @@
 
 This UI can fine-tune two separate models that work together in tandem to retrieve relevant documents.
 
+By default, models will be trained on the [Climate Fever](https://www.sustainablefinance.uzh.ch/en/research/climate-fever.html) dataset. This is a set of statements about global warming and climate change, along with evidence from Wikipedia confirming or refuting the claim.
+
 ### Definitions
 
 **Bi Encoder**- A transformer model that turns text into dense vectors (tensors).
