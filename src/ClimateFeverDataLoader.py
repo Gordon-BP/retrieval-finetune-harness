@@ -77,7 +77,7 @@ class ClimateFeverDataLoader():
                 else:
                     ie = evidence_corpus.loc[~evidence_corpus['evidence'].isin(relevant_evidence)]
                     for re in relevant_evidence:
-                      t=Triplet(items=[row['claim'], re, ie.sample().iloc[0][0]])
+                      t=Triplet(items=[row.loc['claim'], re, ie.sample().iloc[0][0]])
                       triplets.append(t.items)
                 return triplets
         trips_list = []

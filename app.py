@@ -50,7 +50,8 @@ def train_model(model_name, epochs, batches, margin, learning_rate, warmup_mult)
                    BI_ENCODER_LEARNING_RATE=learning_rate,
                    BI_ENCODER_WARMUP_MULT=warmup_mult,
                    BI_ENCODER_BATCH=int(batches),
-                   bi_encoder_training_set=bi_encoder_training_set)
+                   bi_encoder_training_set=bi_encoder_training_set,
+                   PROGRESS_BAR=gr.Progress(track_tqdm=True))
     return "Model trained successfully!"
 def evaluation_results():
     # Logic to get the precision, recall, and F1 scores for the four runs

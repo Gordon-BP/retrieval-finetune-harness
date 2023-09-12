@@ -3,6 +3,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer, AutoModel
 from torch.nn import TripletMarginLoss
+from tqdm import tqdm
 
 # Custom dataset that tokenizes the text data and returns the tokenized inputs
 class CustomDataset(Dataset):
@@ -57,7 +58,8 @@ class BertTrainingPipeline:
                    BI_ENCODER_LEARNING_RATE,
                    BI_ENCODER_WARMUP_MULT,
                    BI_ENCODER_BATCH,
-                   bi_encoder_training_set):
+                   bi_encoder_training_set,
+                   PROGRESS_BAR,):
       # Load data
       train_dataset = CustomDataset(bi_encoder_training_set[1:].tolist(), self.model_name)
       train_dataloader = DataLoader(train_dataset, shuffle=True, collate_fn=self.collate_fn, batch_size=BI_ENCODER_BATCH)
@@ -75,7 +77,8 @@ class BertTrainingPipeline:
       num_epochs = BI_ENCODER_EPOCHS
       for epoch in range(num_epochs):
           total_loss = 0
-          for batch in train_dataloader:
+          for batch in tqdm(train_dataloader):
+              print(batch)
               optimizer.zero_grad()
               anchor_input_ids = batch['anchor']['input_ids']
               anchor_attention_mask = batch['anchor']['attention_mask']
