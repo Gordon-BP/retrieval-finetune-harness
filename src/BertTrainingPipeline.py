@@ -5,7 +5,12 @@ from transformers import AutoTokenizer, AutoModel
 from torch.nn import TripletMarginLoss
 from tqdm import tqdm
 
-# Custom dataset that tokenizes the text data and returns the tokenized inputs
+#
+# Wow look at me I'm so smart I can build my own model training pipeline
+# using only pytorch! It only took me a week and it is both slower and 
+# less feature-rich than the myriad pre-built and widely adopted solutions!
+# I am soooo proud of myself
+#
 class CustomDataset(Dataset):
     def __init__(self, text_data, model_name):
         self.text_data = text_data

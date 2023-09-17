@@ -18,7 +18,7 @@ class CrossEncoderDatum(BaseModel):
     label: int
 
 
-class ClimateFeverDataLoader():
+class ClimateFeverDataLoaderClass():
     """
     Class to load the Climate Fever dataset and then parse it into four datasets:
         * Evidence Corpus: a DataFrame of all the different pieces of evidence (facts) used

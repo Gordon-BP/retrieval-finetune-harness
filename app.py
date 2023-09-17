@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import src.ClimateFeverDataLoader as ClimateFeverDataLoader
 import src.BertTrainingPipeline as BertTrainingPipeline
+from src.FinetuningPipeline import FinetuningPipeline
 # Data & Evaluation hyperparameters
 DATA_SPLIT = 0.7
 UNKNOWN_PHRASE = "i don't know the answer to this question"
@@ -21,7 +22,7 @@ eval_set = pd.DataFrame()
 
 def load_climate_data():
     # Logic to load your dataset
-    data = ClimateFeverDataLoader.ClimateFeverDataLoader()
+    data = ClimateFeverDataLoader.ClimateFeverDataLoaderClass()
     global evidence_corpus
     global bi_encoder_training_set
     global cross_encoder_training_set
@@ -44,14 +45,12 @@ def load_climate_data():
     return data_summary
 def train_model(model_name, epochs, batches, margin, learning_rate, warmup_mult):
     global bi_encoder_training_set
-    pipeline = BertTrainingPipeline.BertTrainingPipeline(model_name)
-    pipeline.train(BI_ENCODER_EPOCHS=int(epochs),
-                   BI_ENCODER_TRIPLET_MARGIN=margin,
-                   BI_ENCODER_LEARNING_RATE=learning_rate,
-                   BI_ENCODER_WARMUP_MULT=warmup_mult,
-                   BI_ENCODER_BATCH=int(batches),
-                   bi_encoder_training_set=bi_encoder_training_set,
-                   PROGRESS_BAR=gr.Progress(track_tqdm=True))
+    pipeline = FinetuningPipeline(run_name = 'Test run 1',
+            model_name='bert-base-uncased',
+            epochs = 2,
+            batch_size = 16,
+            training_set = bi_encoder_training_set,)
+    pipeline.finetune_model()
     return "Model trained successfully!"
 def evaluation_results():
     # Logic to get the precision, recall, and F1 scores for the four runs
@@ -77,7 +76,7 @@ def fetch_dataset(dataset):
     return df_map[dataset].iloc[:15]
 
 
-with gr.Blocks() as page:
+with gr.Blocks() as demo:
     gr.Markdown("# Gordy's Text Retriever Fine-Tuning UI")
     with gr.Row():
         gr.Markdown("""
@@ -142,4 +141,4 @@ with gr.Blocks() as page:
             gr.Markdown(markdown_content)
 
 # Combine the three windows into one interface
-page.launch(debug=True)
+demo.launch(debug=True)

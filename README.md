@@ -8,6 +8,7 @@ Small Gradio app for fine-tuning document retrieval models
     * [HARDCORE] semantic wikipedia search https://huggingface.co/datasets/Cohere/wikipedia-22-12-en-embeddings
 - [x] reject sentence transformers, embrace pytorch
 - [x] Modify BiEncoder Pipeline to accept param for top-K
+- [ ] Use HF Trainer class
 - [ ] Modify Evals to check top-k results, too
 - [ ] Modify rerank pipeline to accept biencoder pipeline as param instead of re-defining its methods
 - [ ] Chinchilla scaling checker
