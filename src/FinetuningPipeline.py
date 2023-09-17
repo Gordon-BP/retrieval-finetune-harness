@@ -1,16 +1,18 @@
 from transformers import (
-    AutoTokenizer, 
-    AutoModel, 
+    AutoTokenizer,
+    AutoModel,
     DataCollatorForSeq2Seq,
-    Trainer, 
-    TrainingArguments)
-import wandb 
+    Trainer,
+    TrainingArguments,
+)
+import wandb
 import os
 import numpy as np
 from datasets import load_dataset
 from torch.utils.data import Dataset
 from torch.nn import TripletMarginWithDistanceLoss, CosineSimilarity
 from .ClimateFeverDataLoader import ClimateFeverDataLoaderClass
+
 
 class TripletDataset(Dataset):
     def __init__(self, text_data, model_name):
@@ -21,7 +23,9 @@ class TripletDataset(Dataset):
         return len(self.text_data)
 
     def tokenize_function(self, examples):
-        return self.tokenizer(examples, return_tensors='pt', padding="max_length", truncation=True)
+        return self.tokenizer(
+            examples, return_tensors="pt", padding="max_length", truncation=True
+        )
 
     def __getitem__(self, idx):
         anchor, positive, negative = eval(self.text_data[idx])
@@ -29,21 +33,22 @@ class TripletDataset(Dataset):
         positive_inputs = self.tokenizer(positive)
         negative_inputs = self.tokenizer(negative)
         return [anchor_inputs, positive_inputs, negative_inputs]
-    
+
 
 class FinetuningPipeline:
     """
     Docstring
     """
+
     def __init__(
-            self,
-            run_name,
-            model_name,
-            epochs,
-            batch_size,
-            training_set,
-            wandb_project = "My Project"
-        ):
+        self,
+        run_name,
+        model_name,
+        epochs,
+        batch_size,
+        training_set,
+        wandb_project="My Project",
+    ):
         print("Hello world")
 
         # download the model and tokenizer
@@ -53,51 +58,51 @@ class FinetuningPipeline:
         self.small_eval = TripletDataset(training_set[1000:300], model_name)
         # set the wandb project where this run will be logged
 
-        os.environ["WANDB_PROJECT"]="my-project"
+        os.environ["WANDB_PROJECT"] = "my-project"
 
         # save your trained model checkpoint to wandb
-        os.environ["WANDB_LOG_MODEL"]="true"
+        os.environ["WANDB_LOG_MODEL"] = "true"
 
         # turn off watch to log faster
-        os.environ["WANDB_WATCH"]="false"
+        os.environ["WANDB_WATCH"] = "false"
 
     def compute_metrics(eval_pred, margin=1):
-        a,p,n = eval_pred
+        a, p, n = eval_pred
         loss = TripletMarginWithDistanceLoss(
-            distance_function = CosineSimilarity(dim=0),
-            margin=margin)
-        return loss(a.float(),p.float(),n.float())
+            distance_function=CosineSimilarity(dim=0), margin=margin
+        )
+        return loss(a.float(), p.float(), n.float())
 
     def finetune_model(self):
         # pass "wandb" to the 'report_to' parameter to turn on wandb logging
         training_args = TrainingArguments(
-            output_dir='models',
+            output_dir="models",
             report_to="wandb",
-            logging_steps=5, 
+            logging_steps=5,
             per_device_train_batch_size=32,
             per_device_eval_batch_size=32,
             evaluation_strategy="steps",
             eval_steps=20,
-            max_steps = 100,
-            save_steps = 100
+            max_steps=100,
+            save_steps=100,
         )
 
         # define our data collator
         my_data_collator = DataCollatorForSeq2Seq(
-            tokenizer = self.tokenizer,
-            padding = 'longest',
-            max_length = 512 #TODO make this based on the model's embeddings length
+            tokenizer=self.tokenizer,
+            padding="longest",
+            max_length=512,  # TODO make this based on the model's embeddings length
         )
 
         # define the trainer and start training
         trainer = Trainer(
-            model = self.model,
-            tokenizer = self.tokenizer,
-            args = training_args,
-            train_dataset = self.small_training,
-            eval_dataset = self.small_eval,
-            data_collator = my_data_collator,
-            compute_metrics = self.compute_metrics,
+            model=self.model,
+            tokenizer=self.tokenizer,
+            args=training_args,
+            train_dataset=self.small_training,
+            eval_dataset=self.small_eval,
+            data_collator=my_data_collator,
+            compute_metrics=self.compute_metrics,
         )
         trainer.train()
 
