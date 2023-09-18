@@ -11,7 +11,7 @@ import numpy as np
 from datasets import load_dataset
 from torch.utils.data import Dataset
 from torch.nn import TripletMarginWithDistanceLoss, CosineSimilarity
-from .ClimateFeverDataLoader import ClimateFeverDataLoaderClass
+from .old.ClimateFeverDataLoader import ClimateFeverDataLoaderClass
 
 
 class TripletDataset(Dataset):

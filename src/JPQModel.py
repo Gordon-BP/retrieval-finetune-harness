@@ -5,8 +5,8 @@ Encoding part is modified base on
     https://github.com/jingtaozhan/DRhard/blob/main/star/inference.py (SIGIR'21)
 """
 
-from income.jpq.models.backbones import DistilBertDot, RobertaDot, BertDot
-from income.jpq.dataset import TextTokenIdsCache, SequenceDataset, get_collate_function
+from DistilBertDot import DistilBertDot #, RobertaDot, BertDot
+from IncomeDataset import TextTokenIdsCache, SequenceDataset, get_collate_function
 
 from transformers import RobertaConfig, AutoConfig
 from torch.utils.data.dataloader import DataLoader
@@ -24,7 +24,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-class JQPModel:
+class JPQModel:
     @staticmethod
     def prediction(
         model,
@@ -135,20 +135,20 @@ class JQPModel:
                     model_dir, gradient_checkpointing=False
                 )
                 model = DistilBertDot.from_pretrained(model_dir, config=config)
+            # Don't need these cuz I'm only focused on the best performing case rn
+           # elif backbone == "bert":
+           #     print("Loading Model for encoding passages: {} ...".format(model_dir))
+           #     config = AutoConfig.from_pretrained(
+           #         model_dir, gradient_checkpointing=False
+           #     )
+           #     model = BertDot.from_pretrained(model_dir, config=config)
 
-            elif backbone == "bert":
-                print("Loading Model for encoding passages: {} ...".format(model_dir))
-                config = AutoConfig.from_pretrained(
-                    model_dir, gradient_checkpointing=False
-                )
-                model = BertDot.from_pretrained(model_dir, config=config)
-
-            elif backbone == "roberta":
-                print("Loading Model for encoding passages: {} ...".format(model_dir))
-                config = RobertaConfig.from_pretrained(
-                    model_dir, gradient_checkpointing=False
-                )
-                model = RobertaDot.from_pretrained(model_dir, config=config)
+            #elif backbone == "roberta":
+            #    print("Loading Model for encoding passages: {} ...".format(model_dir))
+            #    config = RobertaConfig.from_pretrained(
+            #        model_dir, gradient_checkpointing=False
+            #    )
+            #    model = RobertaDot.from_pretrained(model_dir, config=config)
 
             model = model.to(device)
             self.doc_inference(
@@ -199,15 +199,3 @@ class JQPModel:
         index = faiss.index_gpu_to_cpu(index)
         print("Saving index to CPU memory: {}".format(save_index_path))
         faiss.write_index(index, save_index_path)
-
-
-model = JQPModel(
-    preprocess_dir="./preprocessed/nfcorpus",
-    model_dir="sebastian-hofstaetter/distilbert-dot-tas_b-b256-msmarco",
-    backbone="distilbert",
-    output_dir="./init/nfcorpus",
-    subvector_num=96,
-    max_doc_length=350,
-    eval_batch_size=128,
-    doc_embed_size=768,
-)

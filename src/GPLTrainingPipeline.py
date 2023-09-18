@@ -1,7 +1,7 @@
 # @title 4. TRAIN script trains TAS-B using Generative Pseudo Labeling (GPL)
 from income.jpq.dataset import TextTokenIdsCache, SequenceDataset, pack_tensor_2D
 from income.jpq.models.backbones import DistilBertDot, RobertaDot, BertDot
-from income.jpq.models.backbones.roberta_tokenizer import RobertaTokenizer
+
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader, RandomSampler
 from transformers import (
@@ -152,6 +152,25 @@ class GPLTrainingPipeline:
         queries,
         cross_encoder,
     ):
+        """
+        Compute the loss for a query and its retrieved chunks
+
+        Args:
+            query_embeddings (numpy.ndarray): The embeddings of query data.
+            pq_codes (numpy.ndarray): The PQ codes for data.
+            centroids (numpy.ndarray): The centroids used for encoding.
+            batch_neighbors (list): List of neighbor data for the batch.
+            qids (list): List of query IDs.
+            all_rel_pids (list): List of relevant document IDs for all queries.
+            all_neg_ids (list): List of negative sample document IDs.
+            lambda_cut (float): cutoff for PQ-retrieved hard negatives, whatever that means
+            corpus (dict): The text corpus containing the documents.
+            queries (dict):  The query corpus containing the queries.
+            cross_encoder: The cross-encoder model.
+
+        Returns:
+            float: The computed loss value.
+        """
         loss = 0
         mrr = 0
         train_batch_size = len(batch_neighbors)
@@ -198,19 +217,10 @@ class GPLTrainingPipeline:
             # Divides the scores into two categories
             rel_scores = cur_top_scores[target_labels]
             irrel_scores = cur_top_scores[~target_labels]
-            print(
-                f"Rel scores are of type {type(rel_scores)} and are of size {len(rel_scores)}"
-            )
-            print(rel_scores)
-            print(
-                f"Irrel scores are of type {type(irrel_scores)} and are of size {len(irrel_scores)}"
-            )
-            print(irrel_scores)
 
             # Old code below was giving error because rel_scores was of len 9 and irrel_scores of len 24
-            # Now we truncate irrel_scores of the size of rel_scores
-            if len(irrel_scores) > len(rel_scores):
-                irrel_scores = irrel_scores[: len(rel_scores)]
+            # Now we do margin mean loss
+            # pair_diff = self.loss_margin + irrel_scores.mean() - rel_scores.mean()
             pair_diff = rel_scores - irrel_scores
             # This probably has an impact downstream, and we could consider doing something different
 
@@ -229,20 +239,14 @@ class GPLTrainingPipeline:
             # cross-encoder scores are divided into relevant and irrelevant
             rel_ce_scores = scores_ce[target_labels]
             irrel_ce_scores = scores_ce[~target_labels]
-            # Now we truncate irrel_scores of the size of rel_scores
-            if len(irrel_ce_scores) > len(rel_ce_scores):
-                irrel_ce_scores = irrel_ce_scores[: len(rel_ce_scores)]
-
+            # Now we do mean loss with margin
+            # labels = self.loss_margin + rel_ce_scores.mean() - irrel_ce_scores.mean()
             labels = rel_ce_scores - irrel_ce_scores
             # The MSE loss is calculated between the pair_diff and labels,
             # and added to the cumulative loss.
             cur_loss = loss_function(pair_diff, labels)
             loss += cur_loss
-
-        # Divides the MRR and the cumulative loss by the batch size to average it out.
-        mrr /= train_batch_size
-        loss /= train_batch_size
-        return loss, mrr
+            return loss, mrr
 
     def train(
         self, model, pq_codes, centroid_embeds, opq_transform, opq_index, tokenizer
@@ -485,7 +489,7 @@ class GPLTrainingPipeline:
             config.return_dict = False
             config.gradient_checkpointing = self.gpu_search  # to save cuda memory
             model = RobertaDot.from_pretrained(self.init_model_path, config=config)
-            tokenizer = RobertaTokenizer.from_pretrained(
+            tokenizer = AutoTokenizer.from_pretrained(
                 "roberta-base", do_lower_case=True
             )
 
@@ -574,14 +578,3 @@ class GPLTrainingPipeline:
         self.train(
             model, pq_codes, centroid_embeds, opq_transform, opq_index, tokenizer
         )
-
-
-jpq_pipeline = GPLTrainingPipeline(
-    log_dir="./logs",
-    model_save_dir="./final_models/nfcorpus/gpl",
-    init_index_path="./init/nfcorpus/OPQ96,IVF1,PQ96x8.index",
-    init_model_path="sebastian-hofstaetter/distilbert-dot-tas_b-b256-msmarco",
-    preprocess_dir="./preprocessed/nfcorpus",
-    data_path="./datasets/nfcorpus",
-)
-jpq_pipeline.train_gpl()

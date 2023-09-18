@@ -4,8 +4,8 @@ import gradio as gr
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-import src.ClimateFeverDataLoader as ClimateFeverDataLoader
-import src.BertTrainingPipeline as BertTrainingPipeline
+import src.old.ClimateFeverDataLoader as ClimateFeverDataLoader
+import src.old.BertTrainingPipeline as BertTrainingPipeline
 from src.FinetuningPipeline import FinetuningPipeline
 
 # Data & Evaluation hyperparameters

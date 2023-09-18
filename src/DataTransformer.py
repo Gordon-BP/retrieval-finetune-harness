@@ -1,7 +1,7 @@
 # @title 1. Transform Dataset to JPQ-friendly format
 from beir import util
 from tqdm import tqdm
-from beir.datasets.data_loader import GenericDataLoader
+from BierDataLoader import GenericDataLoader
 
 import pathlib, os, csv
 import argparse
@@ -15,10 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 class DataTransformer:
+    @staticmethod
     def preprocessing(text):
         return text.replace("\r", " ").replace("\t", " ").replace("\n", " ").strip()
 
     def transform(
+        self,
         dataset: str,
         output_dir: str,
         prefix: str = None,
@@ -67,9 +69,9 @@ class DataTransformer:
                 writer.writerow(
                     [
                         doc_id_new,
-                        preprocessing(doc.get("title", ""))
+                        self.preprocessing(doc.get("title", ""))
                         + " "
-                        + preprocessing(doc.get("text", "")),
+                        + self.preprocessing(doc.get("text", "")),
                     ]
                 )
 
@@ -84,7 +86,7 @@ class DataTransformer:
             writer = csv.writer(fIn, delimiter="\t", quoting=csv.QUOTE_MINIMAL)
             for qid, query in tqdm(queries.items(), total=len(queries)):
                 qid_new = query_map[qid]
-                writer.writerow([qid_new, preprocessing(query)])
+                writer.writerow([qid_new, self.preprocessing(query)])
 
         print(
             "Writing Qrels to file: {}...".format(
@@ -100,11 +102,3 @@ class DataTransformer:
                     qid_new = query_map[qid]
                     doc_id_new = doc_map[doc_id]
                     writer.writerow([qid_new, 0, doc_id_new, score])
-
-
-dt = DataTransformer()
-dt.transform(
-    dataset="nfcorpus",
-    output_dir="./datasets/nfcorpus",
-    prefix="",
-)

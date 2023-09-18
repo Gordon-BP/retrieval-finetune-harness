@@ -1,5 +1,4 @@
 # @title Preprocessing Script tokenizes the queries and corpus
-from income.jpq.models.backbones.roberta_tokenizer import RobertaTokenizer
 from transformers import AutoTokenizer
 from tqdm.autonotebook import tqdm
 
@@ -32,7 +31,7 @@ class Preprocessor:
         self.data_dir = data_dir
         ## Use custom RobertaTokenizer provided incase you wish to train a Roberta-base tokenizer
         if tokenizer == "roberta-base":
-            self.tokenizer = RobertaTokenizer.from_pretrained(
+            self.tokenizer = AutoTokenizer.from_pretrained(
                 tokenizer, do_lower_case=True, cache_dir=None
             )
         else:
@@ -369,15 +368,3 @@ class Preprocessor:
         input_id_b = self.pad_input_ids(passage, self.max_query_length)
 
         return q_id, input_id_b, passage_len
-
-
-pp = Preprocessor(
-    max_seq_length=512,
-    max_query_length=128,
-    max_doc_character=10000,
-    data_dir="./datasets/nfcorpus/",
-    tokenizer="sebastian-hofstaetter/distilbert-dot-tas_b-b256-msmarco",
-    out_data_dir="./preprocessed/nfcorpus",
-    threads=32,
-)
-pp.preprocess()
