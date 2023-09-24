@@ -53,7 +53,7 @@ jpq_pipeline = GPLTrainingPipeline(
 jpq_pipeline.train_gpl()
 
 # 5. Convert TAS-B trained model into JPQTower (Reqd. for inference)
-#python -m income.jpq.models.jpqtower_converter \
+# python -m income.jpq.models.jpqtower_converter \
 #        --query_encoder_model "./final_models/${dataset}/genq/epoch-1" \
 #        --doc_encoder_model "sebastian-hofstaetter/distilbert-dot-tas_b-b256-msmarco" \
 #        --query_faiss_index "./final_models/${dataset}/genq/epoch-1/OPQ96,IVF1,PQ96x8.index" \

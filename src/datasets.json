@@ -1,15 +1,14 @@
-[
-    {
-        "title":"Malaysian Digital Economy Corp",
+{
+    "Malaysian Digital Economy Corp":{
         "desc":"Let's digitize Malaysia's economy! MDEC runs programs and services for Malaysian individuals and business to upskill and embrace digitization! MDEC also promotes Malaysian technology abroad and facilitates skilled immigration into Malaysia. Scraped from https://mdec.my/ Available in English and Bahasa Malay.",
         "languages":["en", "bh"]
-    },{
-        "title":"Canadian Immigration",
+    },
+    "Canadian Immigration":{
         "desc":"Want to immigrate to Canada? This dataset has all the information you need about the different Canadian visas and application processes. Scraped from https://www.canada.ca/ Available in English and French.",
         "languages":["en","fr"]
-    },{
-        "title":"Genshin Impact Wiki",
+    },
+    "Genshin Impact Wiki":{
         "desc":"Get all the details about your favorite Genshin Impact characters, quests, items, and locations! I've never played Genshin before but my nieces and nephews think it's the shit! This info comes from the Fandom wikia and is available in English, Vietnamese, and Spanish.",
         "languages":["en", "vi", "es"]
     }
-]
+}
