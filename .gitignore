@@ -1,6 +1,7 @@
 data/
 models/
 wandb/
+indices/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
