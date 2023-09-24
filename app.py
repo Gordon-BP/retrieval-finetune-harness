@@ -51,6 +51,16 @@ def load_climate_data():
     """
     return data_summary
 
+def load_mwediawiki_data(path:str)->str:
+    loader = MWDumpLoader(
+        file_path = path, 
+        encoding="utf8",
+        #namespaces = [0,2,3] Optional list to load only specific namespaces. Loads all namespaces by default.
+        skip_redirects = True, #will skip over pages that just redirect to other pages (or not if False)
+        stop_on_error = False #will skip over pages that cause parsing errors (or not if False)
+        )
+    documents = loader.load()
+    print(f"You have {len(documents)} document(s) in your data ")
 
 def train_model(model_name, epochs, batches, margin, learning_rate, warmup_mult):
     global bi_encoder_training_set

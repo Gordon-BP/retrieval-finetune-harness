@@ -5,9 +5,19 @@ Small Gradio app for fine-tuning document retrieval models
 * Modified loss function from pairwise subtraction to mean subtraction w. margin
 * Using Transformers latest tokenizer for Roberta (like it matters tho)
 
+## What IF...
+Instead of using separate, fine-tuned models for each dataset, we have a **single** model and train a separate LoRA for each task?
+**Pros:**
+* A LoRA is smaller than a fine-tuned model
+* Training LoRA can be faster & less intense
+
+**Cons:**
+* How TF do you train a Bert LoRA?
+* This is getting complicated, bro
+
 
 ## OK Here's the plan:
-1. Take the multilingual wikipedia embeddings from cohere (like this one https://huggingface.co/datasets/Cohere/miracl-id-corpus-22-12) and put it into a weaviate db
+1. Take info from the Genshin Impact wikia https://genshin-impact.fandom.com/wiki/Genshin_Impact_Wiki, embed it using cohere multilingual, and put it in weaviate db.
 2. Build a basic RAG chat with langchain using cohere embeddings for retrieval and chatGPT for synthesis
 3. Take those same multilingual wikipedia embeddings from cohere but yeet the embeddings and build your own IVF_PQ database on weaviate
 4. Use https://huggingface.co/doc2query model for the specific language (they have a lot of them) to generate 3 synthetic queries per passage. Should probably just use a random sample of the passages TBH
