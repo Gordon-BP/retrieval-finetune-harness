@@ -24,12 +24,15 @@ mwtypes = {git = "https://github.com/mediawiki-utilities/python-mwtypes", rev = 
 langchain = "^0.0.295"
 cohere = "^4.27"
 openai = "^0.28.0"
+bs4 = "^0.0.1"
+lxml = "^4.9.3"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
-notebook = "^7.0.4"
 unstructured = "^0.10.16"
 bs4 = "^0.0.1"
 black = "^23.9.1"
+tiktoken = "^0.5.1"
 
 [build-system]
 requires = ["poetry-core"]
