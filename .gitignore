@@ -1,6 +1,10 @@
 data/
 models/
 wandb/
+indices/
+*.ipynb
+*.faiss 
+# can't be uploading the indices
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
