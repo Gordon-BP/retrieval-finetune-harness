@@ -33,6 +33,7 @@ unstructured = "^0.10.16"
 bs4 = "^0.0.1"
 black = "^23.9.1"
 tiktoken = "^0.5.1"
+ipykernel = "^6.25.2"
 
 [build-system]
 requires = ["poetry-core"]
